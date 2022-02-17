@@ -1,0 +1,86 @@
+import os
+import pandas as pd
+import numpy as np
+import re
+
+###Define constants
+params = {
+    'gdrive_folder_id' : '1FumjvqmkvENsulhJzOQvNN5KGX7EeVNn', # the ID of gdrive folder to get data from
+    'data_dir' : 'C:/Users/njcy8/Documents/Projects/gs_fromDrive_2_bq/data', # the path to download the gdrive data to e.g. '/content/data'
+    'sheet_names' : ['HW','TRUG','BUN'], # These are the sheet names for each spreadsheet to read in as pandas dataframe
+}
+
+### Define functions
+def google_auth(web_serve=True):
+    # requires a 'client_secrets.json' in working directory
+    from pydrive.auth import GoogleAuth
+    gauth = GoogleAuth()
+    if web_serve:
+        gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
+    return gauth
+
+def drive_connect(gauth):
+    drive = GoogleDrive(gauth)
+
+def list_dir_files(dir):
+    return dir |> os.listdir
+
+def get_dmy_from_filename(fn):
+    dmy_regex = '([0-9]{2})-([0-9]{2})-([0-9]{4})'
+    title_search = fn |> ((x) -> re.search(dmy_regex, x, re.IGNORECASE))
+    if title_search:
+        # return groups 3,2 then 1 separated by '-'
+        return title_search |> .group |> ((x) -> map(x,[3,2,1])) |> list |> ((x) -> '-'.join(x))
+    else:
+        return ''
+
+def xl_2_pd(dir_name, file_name, sheet_name):
+    temp_df = pd.read_excel(dir_name+'/'+file_name, sheet_name=sheet_name)
+    temp_df['sheet_name'] = sheet_name
+    temp_df['source_date'] = get_dmy_from_filename(file_name)
+    temp_df['file_name'] = file_name
+    return temp_df
+
+def float2str(d):
+    try:
+        d |> int |> str
+    except:
+        ''
+
+### Get the data
+df_dict = {}
+for sn in params['sheet_names']:
+    df_dict[sn] = params['data_dir'] |> list_dir_files |> map$((x) -> xl_2_pd(params['data_dir'], x, sn)) |> list
+
+### Make single dataframe
+all_df = df_dict.keys() |> map$((k)-> pd.concat(df_dict[k])) |> pd.concat
+
+### clean column names 
+all_df.columns = all_df |> .columns |> .str.replace(' ','_', regex=False) |> .str.replace('.','_', regex=False)
+
+### reorder columns
+# Stefan Petiq 20220214:  Everything exactly how it is except Wow_code, Plant, Sheet_name, Source_date, file_name
+# moved to be the last 5 fields at the end of the sheet
+last_cols = ['WOW_code', 'Plant', 'sheet_name', 'source_date', 'file_name']
+new_col_order = all_df |> .columns |> filter$((x) -> x not in last_cols) |> list |> ((x) -> x+last_cols)
+all_df = all_df[new_col_order]
+
+### Delete unwanted sheets
+all_df = all_df |> .query("file_name != '35 week Primal Advice 10-01-2022 with unlimited capasity.xlsx'")
+
+### get the right dtypes
+all_df['WOW_code'] = all_df['WOW_code'] |> map$((x)-> float2str(x)) |> list
+all_df['PrimalID'] = all_df['PrimalID'] |> map$((x)-> float2str(x)) |> list
+
+### Save to bigquery
+#pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')
+
+
+
+
+
+from pydrive.auth import GoogleAuth
+
+gauth = GoogleAuth()
+gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
+
