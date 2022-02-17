@@ -20,7 +20,8 @@ def google_auth(web_serve=True):
     return gauth
 
 def drive_connect(gauth):
-    drive = GoogleDrive(gauth)
+    from pydrive.drive import GoogleDrive
+    return GoogleDrive(gauth)
 
 def list_dir_files(dir):
     return dir |> os.listdir
@@ -47,7 +48,28 @@ def float2str(d):
     except:
         ''
 
-### Get the data
+### auth google and drive:
+gauth = google_auth()
+gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
+drive = drive_connect(gauth)
+
+### download data from drive:
+local_download_path = os.path.expanduser(params['data_dir'])
+try:
+  os.makedirs(local_download_path)
+except: pass
+
+file_list = drive.ListFile(
+    {'q': f"'{params['gdrive_folder_id']}' in parents"}).GetList()
+
+for f in file_list:
+  print('title: %s, id: %s' % (f['title'], f['id']))
+  fname = os.path.join(local_download_path, f['title'])
+  print('downloading to {}'.format(fname))
+  f_ = drive.CreateFile({'id': f['id']})
+  f_.GetContentFile(fname)
+
+### Get data from excel to python object(s)
 df_dict = {}
 for sn in params['sheet_names']:
     df_dict[sn] = params['data_dir'] |> list_dir_files |> map$((x) -> xl_2_pd(params['data_dir'], x, sn)) |> list
@@ -74,13 +96,3 @@ all_df['PrimalID'] = all_df['PrimalID'] |> map$((x)-> float2str(x)) |> list
 
 ### Save to bigquery
 #pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')
-
-
-
-
-
-from pydrive.auth import GoogleAuth
-
-gauth = GoogleAuth()
-gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
-

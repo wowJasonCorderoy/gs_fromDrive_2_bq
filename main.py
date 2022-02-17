@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# __coconut_hash__ = 0x988ff6c7
+# __coconut_hash__ = 0xe2416da7
 
 # Compiled with Coconut version 1.6.0 [Vocational Guidance Counsellor]
 
@@ -936,57 +936,99 @@ import re  #4 (line num in coconut source)
 params = {'gdrive_folder_id': '1FumjvqmkvENsulhJzOQvNN5KGX7EeVNn', 'data_dir': 'C:/Users/njcy8/Documents/Projects/gs_fromDrive_2_bq/data', 'sheet_names': ['HW', 'TRUG', 'BUN']}  #7 (line num in coconut source)
 
 ### Define functions
-@_coconut_tco  #14 (line num in coconut source)
-def list_dir_files(dir):  #14 (line num in coconut source)
-    return _coconut_tail_call((os.listdir), dir)  #15 (line num in coconut source)
+def google_auth(web_serve=True):  #14 (line num in coconut source)
+# requires a 'client_secrets.json' in working directory
+    from pydrive.auth import GoogleAuth  #16 (line num in coconut source)
+    gauth = GoogleAuth()  #17 (line num in coconut source)
+    if web_serve:  #18 (line num in coconut source)
+        gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.  #19 (line num in coconut source)
+    return (gauth)  #20 (line num in coconut source)
 
-@_coconut_tco  #17 (line num in coconut source)
-def get_dmy_from_filename(fn):  #17 (line num in coconut source)
-    dmy_regex = '([0-9]{2})-([0-9]{2})-([0-9]{4})'  #18 (line num in coconut source)
-    title_search = ((lambda x: re.search(dmy_regex, x, re.IGNORECASE)))(fn)  #19 (line num in coconut source)
-    if title_search:  #20 (line num in coconut source)
+def drive_connect(gauth):  #22 (line num in coconut source)
+    from pydrive.drive import GoogleDrive  #23 (line num in coconut source)
+    drive = GoogleDrive(gauth)  #24 (line num in coconut source)
+
+@_coconut_tco  #26 (line num in coconut source)
+def list_dir_files(dir):  #26 (line num in coconut source)
+    return _coconut_tail_call((os.listdir), dir)  #27 (line num in coconut source)
+
+@_coconut_tco  #29 (line num in coconut source)
+def get_dmy_from_filename(fn):  #29 (line num in coconut source)
+    dmy_regex = '([0-9]{2})-([0-9]{2})-([0-9]{4})'  #30 (line num in coconut source)
+    title_search = ((lambda x: re.search(dmy_regex, x, re.IGNORECASE)))(fn)  #31 (line num in coconut source)
+    if title_search:  #32 (line num in coconut source)
 # return groups 3,2 then 1 separated by '-'
-        return _coconut_tail_call(((lambda x: '-'.join(x))), (list)(((lambda x: map(x, [3, 2, 1])))((title_search).group)))  #22 (line num in coconut source)
-    else:  #23 (line num in coconut source)
-        return ('')  #24 (line num in coconut source)
+        return _coconut_tail_call(((lambda x: '-'.join(x))), (list)(((lambda x: map(x, [3, 2, 1])))((title_search).group)))  #34 (line num in coconut source)
+    else:  #35 (line num in coconut source)
+        return ('')  #36 (line num in coconut source)
 
-def xl_2_pd(dir_name, file_name, sheet_name):  #26 (line num in coconut source)
-    temp_df = pd.read_excel(dir_name + '/' + file_name, sheet_name=sheet_name)  #27 (line num in coconut source)
-    temp_df['sheet_name'] = sheet_name  #28 (line num in coconut source)
-    temp_df['source_date'] = get_dmy_from_filename(file_name)  #29 (line num in coconut source)
-    temp_df['file_name'] = file_name  #30 (line num in coconut source)
-    return (temp_df)  #31 (line num in coconut source)
+def xl_2_pd(dir_name, file_name, sheet_name):  #38 (line num in coconut source)
+    temp_df = pd.read_excel(dir_name + '/' + file_name, sheet_name=sheet_name)  #39 (line num in coconut source)
+    temp_df['sheet_name'] = sheet_name  #40 (line num in coconut source)
+    temp_df['source_date'] = get_dmy_from_filename(file_name)  #41 (line num in coconut source)
+    temp_df['file_name'] = file_name  #42 (line num in coconut source)
+    return (temp_df)  #43 (line num in coconut source)
 
-def float2str(d):  #33 (line num in coconut source)
-    try:  #34 (line num in coconut source)
-        (str)((int)(d))  #35 (line num in coconut source)
-    except:  #36 (line num in coconut source)
-        ''  #37 (line num in coconut source)
+def float2str(d):  #45 (line num in coconut source)
+    try:  #46 (line num in coconut source)
+        (str)((int)(d))  #47 (line num in coconut source)
+    except:  #48 (line num in coconut source)
+        ''  #49 (line num in coconut source)
 
-### Get the data
-df_dict = {}  #40 (line num in coconut source)
-for sn in params['sheet_names']:  #41 (line num in coconut source)
-    df_dict[sn] = (list)((map)(lambda x: xl_2_pd(params['data_dir'], x, sn), (list_dir_files)(params['data_dir'])))  #42 (line num in coconut source)
+### auth google and drive:
+gauth = google_auth()  #52 (line num in coconut source)
+gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.  #53 (line num in coconut source)
+drive = drive_connect(gauth)  #54 (line num in coconut source)
+
+### download data from drive:
+local_download_path = os.path.expanduser(params['data_dir'])  #57 (line num in coconut source)
+try:  #58 (line num in coconut source)
+    os.makedirs(local_download_path)  #59 (line num in coconut source)
+except:  #60 (line num in coconut source)
+    pass  #60 (line num in coconut source)
+
+file_list = drive.ListFile({'q': f"'{params['gdrive_folder_id']}' in parents"}).GetList()  #62 (line num in coconut source)
+
+for f in file_list:  #65 (line num in coconut source)
+    print('title: %s, id: %s' % (f['title'], f['id']))  #66 (line num in coconut source)
+    fname = os.path.join(local_download_path, f['title'])  #67 (line num in coconut source)
+    print('downloading to {}'.format(fname))  #68 (line num in coconut source)
+    f_ = drive.CreateFile({'id': f['id']})  #69 (line num in coconut source)
+    f_.GetContentFile(fname)  #70 (line num in coconut source)
+
+### Get data from excel to python objects
+df_dict = {}  #73 (line num in coconut source)
+for sn in params['sheet_names']:  #74 (line num in coconut source)
+    df_dict[sn] = (list)((map)(lambda x: xl_2_pd(params['data_dir'], x, sn), (list_dir_files)(params['data_dir'])))  #75 (line num in coconut source)
 
 ### Make single dataframe
-all_df = (pd.concat)((map)(lambda k: pd.concat(df_dict[k]), df_dict.keys()))  #45 (line num in coconut source)
+all_df = (pd.concat)((map)(lambda k: pd.concat(df_dict[k]), df_dict.keys()))  #78 (line num in coconut source)
 
 ### clean column names 
-all_df.columns = (((all_df).columns).str.replace(' ', '_', regex=False)).str.replace('.', '_', regex=False)  #48 (line num in coconut source)
+all_df.columns = (((all_df).columns).str.replace(' ', '_', regex=False)).str.replace('.', '_', regex=False)  #81 (line num in coconut source)
 
 ### reorder columns
 # Stefan Petiq 20220214:  Everything exactly how it is except Wow_code, Plant, Sheet_name, Source_date, file_name
 # moved to be the last 5 fields at the end of the sheet
-last_cols = ['WOW_code', 'Plant', 'sheet_name', 'source_date', 'file_name']  #53 (line num in coconut source)
-new_col_order = ((lambda x: x + last_cols))((list)((filter)(lambda x: x not in last_cols, (all_df).columns)))  #54 (line num in coconut source)
-all_df = all_df[new_col_order]  #55 (line num in coconut source)
+last_cols = ['WOW_code', 'Plant', 'sheet_name', 'source_date', 'file_name']  #86 (line num in coconut source)
+new_col_order = ((lambda x: x + last_cols))((list)((filter)(lambda x: x not in last_cols, (all_df).columns)))  #87 (line num in coconut source)
+all_df = all_df[new_col_order]  #88 (line num in coconut source)
 
 ### Delete unwanted sheets
-all_df = (all_df).query("file_name != '35 week Primal Advice 10-01-2022 with unlimited capasity.xlsx'")  #58 (line num in coconut source)
+all_df = (all_df).query("file_name != '35 week Primal Advice 10-01-2022 with unlimited capasity.xlsx'")  #91 (line num in coconut source)
 
 ### get the right dtypes
-all_df['WOW_code'] = (list)((map)(lambda x: float2str(x), all_df['WOW_code']))  #61 (line num in coconut source)
-all_df['PrimalID'] = (list)((map)(lambda x: float2str(x), all_df['PrimalID']))  #62 (line num in coconut source)
+all_df['WOW_code'] = (list)((map)(lambda x: float2str(x), all_df['WOW_code']))  #94 (line num in coconut source)
+all_df['PrimalID'] = (list)((map)(lambda x: float2str(x), all_df['PrimalID']))  #95 (line num in coconut source)
 
 ### Save to bigquery
 #pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')
+
+
+
+
+
+from pydrive.auth import GoogleAuth  #104 (line num in coconut source)
+
+gauth = GoogleAuth()  #106 (line num in coconut source)
+gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.  #107 (line num in coconut source)
