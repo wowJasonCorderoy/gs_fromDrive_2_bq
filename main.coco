@@ -44,9 +44,9 @@ def xl_2_pd(dir_name, file_name, sheet_name):
 
 def float2str(d):
     try:
-        d |> int |> str
+        return d |> int |> str
     except:
-        ''
+        return ''
 
 ### auth google and drive:
 gauth = google_auth()
@@ -59,8 +59,7 @@ try:
   os.makedirs(local_download_path)
 except: pass
 
-file_list = drive.ListFile(
-    {'q': f"'{params['gdrive_folder_id']}' in parents"}).GetList()
+file_list = {'q': f"'{params['gdrive_folder_id']}' in parents"} |> drive.ListFile |> .GetList()
 
 for f in file_list:
   print('title: %s, id: %s' % (f['title'], f['id']))
@@ -95,4 +94,13 @@ all_df['WOW_code'] = all_df['WOW_code'] |> map$((x)-> float2str(x)) |> list
 all_df['PrimalID'] = all_df['PrimalID'] |> map$((x)-> float2str(x)) |> list
 
 ### Save to bigquery
-#pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')
+from google.oauth2 import service_account
+credentials = service_account.Credentials.from_service_account_file(
+            r"C:\dev\greenstock\optimiser_files\key.json", scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+# Update the in-memory credentials cache (added in pandas-gbq 0.7.0).
+import pandas_gbq
+pandas_gbq.context.credentials = credentials
+pandas_gbq.context.project = "gcp-wow-pvc-grnstck-prod"
+
+pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice2', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')
