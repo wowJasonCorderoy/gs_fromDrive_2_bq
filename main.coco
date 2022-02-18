@@ -62,9 +62,9 @@ except: pass
 file_list = {'q': f"'{params['gdrive_folder_id']}' in parents"} |> drive.ListFile |> .GetList()
 
 for f in file_list:
-  print('title: %s, id: %s' % (f['title'], f['id']))
+  print <| f"title: {f['title']}, id: {f['id']}"
   fname = os.path.join(local_download_path, f['title'])
-  print('downloading to {}'.format(fname))
+  print <| f"downloading to {fname}"
   f_ = drive.CreateFile({'id': f['id']})
   f_.GetContentFile(fname)
 
@@ -103,4 +103,4 @@ import pandas_gbq
 pandas_gbq.context.credentials = credentials
 pandas_gbq.context.project = "gcp-wow-pvc-grnstck-prod"
 
-pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice2', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')
+pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')
