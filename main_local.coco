@@ -13,6 +13,7 @@ params = {
 ### Define functions
 def google_auth(web_serve=True):
     # requires a 'client_secrets.json' in working directory
+    # instructions here: https://pythonhosted.org/PyDrive/quickstart.html
     from pydrive.auth import GoogleAuth
     gauth = GoogleAuth()
     if web_serve:
