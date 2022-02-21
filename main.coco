@@ -14,7 +14,7 @@ params = {
 PROJECT_ID = 'gcp-wow-pvc-grnstck-prod'
 
 ### Define functions
-def google_auth(web_serve=True):
+def google_auth(web_serve=False):
     # requires a 'client_secrets.json' in working directory
     # instructions here: https://pythonhosted.org/PyDrive/quickstart.html
     from pydrive.auth import GoogleAuth
@@ -22,6 +22,7 @@ def google_auth(web_serve=True):
     if web_serve:
         gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
     else:
+        # https://pythonhosted.org/PyDrive/oauth.html
         gauth.LoadCredentialsFile("settings.yaml")
     return gauth
 
@@ -54,7 +55,7 @@ def float2str(d):
     except:
         return ''
 
-if __name__ == "__main__":
+def main():
     ### auth google and drive:
     gauth = google_auth()
     #gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
@@ -116,6 +117,9 @@ if __name__ == "__main__":
     # Update the in-memory credentials cache (added in pandas-gbq 0.7.0).
     import pandas_gbq
     pandas_gbq.context.credentials = credentials
-    pandas_gbq.context.project = "gcp-wow-pvc-grnstck-prod"
+    pandas_gbq.context.project = PROJECT_ID
 
     pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', PROJECT_ID, chunksize=100000, reauth=False, if_exists='replace')
+
+if __name__ == "__main__":
+    main()
