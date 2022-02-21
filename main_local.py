@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# __coconut_hash__ = 0xf1af807
+# __coconut_hash__ = 0x4f900ef4
 
 # Compiled with Coconut version 1.6.0 [Vocational Guidance Counsellor]
 
@@ -931,103 +931,117 @@ import os  #1 (line num in coconut source)
 import pandas as pd  #2 (line num in coconut source)
 import numpy as np  #3 (line num in coconut source)
 import re  #4 (line num in coconut source)
+from google.cloud import bigquery  #5 (line num in coconut source)
 
 ###Define constants
-params = {'gdrive_folder_id': '1FumjvqmkvENsulhJzOQvNN5KGX7EeVNn', 'data_dir': 'C:/Users/njcy8/Documents/Projects/gs_fromDrive_2_bq/data', 'sheet_names': ['HW', 'TRUG', 'BUN']}  #7 (line num in coconut source)
+params = {'gdrive_folder_id': '1FumjvqmkvENsulhJzOQvNN5KGX7EeVNn', 'data_dir': 'C:/Users/njcy8/Documents/Projects/gs_fromDrive_2_bq/data', 'sheet_names': ['HW', 'TRUG', 'BUN']}  #8 (line num in coconut source)
+
+PROJECT_ID = 'gcp-wow-pvc-grnstck-prod'  #14 (line num in coconut source)
 
 ### Define functions
-def google_auth(web_serve=True):  #14 (line num in coconut source)
+def google_auth(web_serve=True):  #17 (line num in coconut source)
 # requires a 'client_secrets.json' in working directory
-    from pydrive.auth import GoogleAuth  #16 (line num in coconut source)
-    gauth = GoogleAuth()  #17 (line num in coconut source)
-    if web_serve:  #18 (line num in coconut source)
-        gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.  #19 (line num in coconut source)
-    return (gauth)  #20 (line num in coconut source)
+# instructions here: https://pythonhosted.org/PyDrive/quickstart.html
+    from pydrive.auth import GoogleAuth  #20 (line num in coconut source)
+    gauth = GoogleAuth()  #21 (line num in coconut source)
+    if web_serve:  #22 (line num in coconut source)
+        gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.  #23 (line num in coconut source)
+    else:  #24 (line num in coconut source)
+        gauth.LoadCredentialsFile("settings.yaml")  #25 (line num in coconut source)
+    return (gauth)  #26 (line num in coconut source)
 
-@_coconut_tco  #22 (line num in coconut source)
-def drive_connect(gauth):  #22 (line num in coconut source)
-    from pydrive.drive import GoogleDrive  #23 (line num in coconut source)
-    return _coconut_tail_call(GoogleDrive, gauth)  #24 (line num in coconut source)
+@_coconut_tco  #28 (line num in coconut source)
+def drive_connect(gauth):  #28 (line num in coconut source)
+    from pydrive.drive import GoogleDrive  #29 (line num in coconut source)
+    return _coconut_tail_call(GoogleDrive, gauth)  #30 (line num in coconut source)
 
-@_coconut_tco  #26 (line num in coconut source)
-def list_dir_files(dir):  #26 (line num in coconut source)
-    return _coconut_tail_call((os.listdir), dir)  #27 (line num in coconut source)
+@_coconut_tco  #32 (line num in coconut source)
+def list_dir_files(dir):  #32 (line num in coconut source)
+    return _coconut_tail_call((os.listdir), dir)  #33 (line num in coconut source)
 
-@_coconut_tco  #29 (line num in coconut source)
-def get_dmy_from_filename(fn):  #29 (line num in coconut source)
-    dmy_regex = '([0-9]{2})-([0-9]{2})-([0-9]{4})'  #30 (line num in coconut source)
-    title_search = ((lambda x: re.search(dmy_regex, x, re.IGNORECASE)))(fn)  #31 (line num in coconut source)
-    if title_search:  #32 (line num in coconut source)
+@_coconut_tco  #35 (line num in coconut source)
+def get_dmy_from_filename(fn):  #35 (line num in coconut source)
+    dmy_regex = '([0-9]{2})-([0-9]{2})-([0-9]{4})'  #36 (line num in coconut source)
+    title_search = ((lambda x: re.search(dmy_regex, x, re.IGNORECASE)))(fn)  #37 (line num in coconut source)
+    if title_search:  #38 (line num in coconut source)
 # return groups 3,2 then 1 separated by '-'
-        return _coconut_tail_call(((lambda x: '-'.join(x))), (list)(((lambda x: map(x, [3, 2, 1])))((title_search).group)))  #34 (line num in coconut source)
-    else:  #35 (line num in coconut source)
-        return ('')  #36 (line num in coconut source)
+        return _coconut_tail_call(((lambda x: '-'.join(x))), (list)(((lambda x: map(x, [3, 2, 1])))((title_search).group)))  #40 (line num in coconut source)
+    else:  #41 (line num in coconut source)
+        return ('')  #42 (line num in coconut source)
 
-def xl_2_pd(dir_name, file_name, sheet_name):  #38 (line num in coconut source)
-    temp_df = pd.read_excel(dir_name + '/' + file_name, sheet_name=sheet_name)  #39 (line num in coconut source)
-    temp_df['sheet_name'] = sheet_name  #40 (line num in coconut source)
-    temp_df['source_date'] = get_dmy_from_filename(file_name)  #41 (line num in coconut source)
-    temp_df['file_name'] = file_name  #42 (line num in coconut source)
-    return (temp_df)  #43 (line num in coconut source)
+def xl_2_pd(dir_name, file_name, sheet_name):  #44 (line num in coconut source)
+    temp_df = pd.read_excel(dir_name + '/' + file_name, sheet_name=sheet_name)  #45 (line num in coconut source)
+    temp_df['sheet_name'] = sheet_name  #46 (line num in coconut source)
+    temp_df['source_date'] = get_dmy_from_filename(file_name)  #47 (line num in coconut source)
+    temp_df['file_name'] = file_name  #48 (line num in coconut source)
+    return (temp_df)  #49 (line num in coconut source)
 
-def float2str(d):  #45 (line num in coconut source)
-    try:  #46 (line num in coconut source)
-        return ((str)((int)(d)))  #47 (line num in coconut source)
-    except:  #48 (line num in coconut source)
-        return ('')  #49 (line num in coconut source)
+def float2str(d):  #51 (line num in coconut source)
+    try:  #52 (line num in coconut source)
+        return ((str)((int)(d)))  #53 (line num in coconut source)
+    except:  #54 (line num in coconut source)
+        return ('')  #55 (line num in coconut source)
 
+if __name__ == "__main__":  #57 (line num in coconut source)
 ### auth google and drive:
-gauth = google_auth()  #52 (line num in coconut source)
-gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.  #53 (line num in coconut source)
-drive = drive_connect(gauth)  #54 (line num in coconut source)
+    gauth = google_auth()  #59 (line num in coconut source)
+#gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
+    drive = drive_connect(gauth)  #61 (line num in coconut source)
 
 ### download data from drive:
-local_download_path = os.path.expanduser(params['data_dir'])  #57 (line num in coconut source)
-try:  #58 (line num in coconut source)
-    os.makedirs(local_download_path)  #59 (line num in coconut source)
-except:  #60 (line num in coconut source)
-    pass  #60 (line num in coconut source)
+    local_download_path = os.path.expanduser(params['data_dir'])  #64 (line num in coconut source)
+    try:  #65 (line num in coconut source)
+        os.makedirs(local_download_path)  #66 (line num in coconut source)
+    except:  #67 (line num in coconut source)
+        pass  #67 (line num in coconut source)
 
-file_list = ((drive.ListFile)({'q': f"'{params['gdrive_folder_id']}' in parents"})).GetList()  #62 (line num in coconut source)
+    file_list = ((drive.ListFile)({'q': f"'{params['gdrive_folder_id']}' in parents"})).GetList()  #69 (line num in coconut source)
 
-for f in file_list:  #64 (line num in coconut source)
-    (print)(f"title: {f['title']}, id: {f['id']}")  #65 (line num in coconut source)
-    fname = os.path.join(local_download_path, f['title'])  #66 (line num in coconut source)
-    (print)(f"downloading to {fname}")  #67 (line num in coconut source)
-    f_ = drive.CreateFile({'id': f['id']})  #68 (line num in coconut source)
-    f_.GetContentFile(fname)  #69 (line num in coconut source)
+    for f in file_list:  #71 (line num in coconut source)
+        (print)(f"title: {f['title']}, id: {f['id']}")  #72 (line num in coconut source)
+        fname = os.path.join(local_download_path, f['title'])  #73 (line num in coconut source)
+        (print)(f"downloading to {fname}")  #74 (line num in coconut source)
+        f_ = drive.CreateFile({'id': f['id']})  #75 (line num in coconut source)
+        f_.GetContentFile(fname)  #76 (line num in coconut source)
 
 ### Get data from excel to python object(s)
-df_dict = {}  #72 (line num in coconut source)
-for sn in params['sheet_names']:  #73 (line num in coconut source)
-    df_dict[sn] = (list)((map)(lambda x: xl_2_pd(params['data_dir'], x, sn), (list_dir_files)(params['data_dir'])))  #74 (line num in coconut source)
+    df_dict = {}  #79 (line num in coconut source)
+    for sn in params['sheet_names']:  #80 (line num in coconut source)
+        df_dict[sn] = (list)((map)(lambda x: xl_2_pd(params['data_dir'], x, sn), (list_dir_files)(params['data_dir'])))  #81 (line num in coconut source)
 
 ### Make single dataframe
-all_df = (pd.concat)((map)(lambda k: pd.concat(df_dict[k]), df_dict.keys()))  #77 (line num in coconut source)
+    all_df = (pd.concat)((map)(lambda k: pd.concat(df_dict[k]), df_dict.keys()))  #84 (line num in coconut source)
 
 ### clean column names 
-all_df.columns = (((all_df).columns).str.replace(' ', '_', regex=False)).str.replace('.', '_', regex=False)  #80 (line num in coconut source)
+    all_df.columns = (((all_df).columns).str.replace(' ', '_', regex=False)).str.replace('.', '_', regex=False)  #87 (line num in coconut source)
 
 ### reorder columns
 # Stefan Petiq 20220214:  Everything exactly how it is except Wow_code, Plant, Sheet_name, Source_date, file_name
 # moved to be the last 5 fields at the end of the sheet
-last_cols = ['WOW_code', 'Plant', 'sheet_name', 'source_date', 'file_name']  #85 (line num in coconut source)
-new_col_order = ((lambda x: x + last_cols))((list)((filter)(lambda x: x not in last_cols, (all_df).columns)))  #86 (line num in coconut source)
-all_df = all_df[new_col_order]  #87 (line num in coconut source)
+    last_cols = ['WOW_code', 'Plant', 'sheet_name', 'source_date', 'file_name']  #92 (line num in coconut source)
+    new_col_order = ((lambda x: x + last_cols))((list)((filter)(lambda x: x not in last_cols, (all_df).columns)))  #93 (line num in coconut source)
+    all_df = all_df[new_col_order]  #94 (line num in coconut source)
 
 ### Delete unwanted sheets
-all_df = (all_df).query("file_name != '35 week Primal Advice 10-01-2022 with unlimited capasity.xlsx'")  #90 (line num in coconut source)
+    all_df = (all_df).query("file_name != '35 week Primal Advice 10-01-2022 with unlimited capasity.xlsx'")  #97 (line num in coconut source)
 
 ### get the right dtypes
-all_df['WOW_code'] = (list)((map)(lambda x: float2str(x), all_df['WOW_code']))  #93 (line num in coconut source)
-all_df['PrimalID'] = (list)((map)(lambda x: float2str(x), all_df['PrimalID']))  #94 (line num in coconut source)
+    all_df['WOW_code'] = (list)((map)(lambda x: float2str(x), all_df['WOW_code']))  #100 (line num in coconut source)
+    all_df['PrimalID'] = (list)((map)(lambda x: float2str(x), all_df['PrimalID']))  #101 (line num in coconut source)
 
 ### Save to bigquery
-from google.oauth2 import service_account  #97 (line num in coconut source)
-credentials = service_account.Credentials.from_service_account_file(r"C:\dev\greenstock\optimiser_files\key.json", scopes=["https://www.googleapis.com/auth/cloud-platform", ])  #98 (line num in coconut source)
-# Update the in-memory credentials cache (added in pandas-gbq 0.7.0).
-import pandas_gbq  #102 (line num in coconut source)
-pandas_gbq.context.credentials = credentials  #103 (line num in coconut source)
-pandas_gbq.context.project = "gcp-wow-pvc-grnstck-prod"  #104 (line num in coconut source)
+    from google.oauth2 import service_account  #104 (line num in coconut source)
+    def get_bq_credentials():  #105 (line num in coconut source)
+        try:  #106 (line num in coconut source)
+            client = (service_account.Credentials.from_service_account_file)(**{'filename': r"C:\dev\greenstock\optimiser_files\key.json", 'scopes': ["https://www.googleapis.com/auth/cloud-platform", ]})  #107 (line num in coconut source)
+        except:  #111 (line num in coconut source)
+            client = bigquery.Client(project=PROJECT_ID)  #112 (line num in coconut source)
+        return (client)  #113 (line num in coconut source)
 
-pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', 'gcp-wow-pvc-grnstck-prod', chunksize=100000, reauth=False, if_exists='replace')  #106 (line num in coconut source)
+    credentials = get_bq_credentials()  #115 (line num in coconut source)
+# Update the in-memory credentials cache (added in pandas-gbq 0.7.0).
+    import pandas_gbq  #117 (line num in coconut source)
+    pandas_gbq.context.credentials = credentials  #118 (line num in coconut source)
+    pandas_gbq.context.project = "gcp-wow-pvc-grnstck-prod"  #119 (line num in coconut source)
+
+    pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', PROJECT_ID, chunksize=100000, reauth=False, if_exists='replace')  #121 (line num in coconut source)
