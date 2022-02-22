@@ -1,4 +1,4 @@
 *.xls*
 client_secrets.json
 env/
-credentials.json
+credentials*.json
