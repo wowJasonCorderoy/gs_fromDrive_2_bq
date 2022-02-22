@@ -55,7 +55,7 @@ def float2str(d):
     except:
         return ''
 
-def main():
+def main(request):
     ### auth google and drive:
     gauth = google_auth()
     #gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
@@ -122,4 +122,4 @@ def main():
     pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', PROJECT_ID, chunksize=100000, reauth=False, if_exists='replace')
 
 if __name__ == "__main__":
-    main()
+    main(None)

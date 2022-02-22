@@ -1,0 +1,1 @@
+gcloud alpha functions deploy hilton_demand_drive_2_bq --region=us-central1 --allow-unauthenticated --memory=8192MB --entry-point=main --runtime=python39 --min-instances=0 --trigger-http --timeout=540

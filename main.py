@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# __coconut_hash__ = 0xb14fb4dd
+# __coconut_hash__ = 0xb33b841
 
 # Compiled with Coconut version 1.6.0 [Vocational Guidance Counsellor]
 
@@ -983,7 +983,7 @@ def float2str(d):  #52 (line num in coconut source)
     except:  #55 (line num in coconut source)
         return ('')  #56 (line num in coconut source)
 
-def main():  #58 (line num in coconut source)
+def main(request):  #58 (line num in coconut source)
 ### auth google and drive:
     gauth = google_auth()  #60 (line num in coconut source)
 #gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
@@ -1048,4 +1048,4 @@ def main():  #58 (line num in coconut source)
     pd.io.gbq.to_gbq(all_df, 'masterdata_view.hfa_primal_advice', PROJECT_ID, chunksize=100000, reauth=False, if_exists='replace')  #122 (line num in coconut source)
 
 if __name__ == "__main__":  #124 (line num in coconut source)
-    main()  #125 (line num in coconut source)
+    main(None)  #125 (line num in coconut source)
