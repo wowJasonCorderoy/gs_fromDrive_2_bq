@@ -7,43 +7,39 @@ from google.cloud import bigquery
 ###Define constants
 params = {
     'gdrive_folder_id' : '1FumjvqmkvENsulhJzOQvNN5KGX7EeVNn', # the ID of gdrive folder to get data from
-    'data_dir' : '/tmp/data', # the path to download the gdrive data to e.g. '/content/data'
+    'data_dir' : 'data', # the path to download the gdrive data to e.g. '/content/data'
     'sheet_names' : ['HW','TRUG','BUN'], # These are the sheet names for each spreadsheet to read in as pandas dataframe
 }
 
 PROJECT_ID = 'gcp-wow-pvc-grnstck-prod'
 
 ### Define functions
-# def google_auth(web_serve=True):
-#     # requires a 'client_secrets.json' in working directory
-#     # instructions here: https://pythonhosted.org/PyDrive/quickstart.html
-#     from pydrive.auth import GoogleAuth
-#     gauth = GoogleAuth()
-#     if web_serve:
-#         gauth.LocalWebserverAuth() # Creates local webserver and auto handles authentication.
-#     else:
-#         # https://pythonhosted.org/PyDrive/oauth.html
-#         gauth.LoadCredentialsFile("settings.yaml")
-#     return gauth
-
-def google_auth(creds_file=os.path.join('tmp', 'credentials.json')): # |> os.path.realpath):
+def google_auth():
     # requires a 'client_secrets.json' in working directory
     # instructions here: https://pythonhosted.org/PyDrive/quickstart.html
     from pydrive.auth import GoogleAuth
     gauth = GoogleAuth()
-    gauth.LoadCredentialsFile(creds_file)
-    if gauth.credentials is None:
-        # Authenticate if they're not there
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        # Refresh them if expired
-        gauth.Refresh()
-    else:
-        # Initialize the saved creds
-        gauth.Authorize()
-    # Save the current credentials to a file
-    gauth.SaveCredentialsFile(creds_file)
+    gauth.LocalWebserverAuth()
     return gauth
+
+# def google_auth(creds_file=os.path.join('tmp', 'credentials.json')): # |> os.path.realpath):
+#     # requires a 'client_secrets.json' in working directory
+#     # instructions here: https://pythonhosted.org/PyDrive/quickstart.html
+#     from pydrive.auth import GoogleAuth
+#     gauth = GoogleAuth()
+#     gauth.LoadCredentialsFile(creds_file)
+#     if gauth.credentials is None:
+#         # Authenticate if they're not there
+#         gauth.LocalWebserverAuth()
+#     elif gauth.access_token_expired:
+#         # Refresh them if expired
+#         gauth.Refresh()
+#     else:
+#         # Initialize the saved creds
+#         gauth.Authorize()
+#     # Save the current credentials to a file
+#     gauth.SaveCredentialsFile(creds_file)
+#     return gauth
 
 def drive_connect(gauth):
     from pydrive.drive import GoogleDrive
